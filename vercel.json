@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "name": "innet-stt-convertor",
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
+  ],
+  "env": {
+    "INNET_NO_BROWSER": "1"
+  }
+}

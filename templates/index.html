@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IN NET STT Convertor — Text to Speech</title>
+  <meta name="description" content="IN NET STT Convertor — Convert text to natural-sounding speech using Microsoft Edge TTS voices. Created by Manohar, powered by IN NET CREATIONS." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design Tokens ─────────────────────────────────────── */
+    :root {
+      --bg: #04060f;
+      --panel: rgba(14, 18, 32, 0.85);
+      --panel-solid: #0e1220;
+      --border: rgba(100, 130, 255, 0.18);
+      --border-bright: rgba(100, 160, 255, 0.38);
+      --text: #e8ecf4;
+      --text-dim: #8a94ab;
+      --text-muted: #4e5870;
+      --accent: #4f8cff;
+      --accent2: #7b5fff;
+      --accent-glow: rgba(79, 140, 255, 0.35);
+      --green: #22d3a0;
+      --red: #ff5f7a;
+      --gold: #ffc851;
+      --radius: 18px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 40px rgba(0,0,0,0.55);
+      --glass: rgba(255,255,255,0.04);
+    }
+
+    /* ── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated Background ───────────────────────────────── */
+    .bg-scene {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .bg-scene::before {
+      content: '';
+      position: absolute;
+      width: 900px; height: 900px;
+      background: radial-gradient(circle, rgba(79,140,255,0.18) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      animation: drift1 18s ease-in-out infinite alternate;
+    }
+    .bg-scene::after {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(123,95,255,0.15) 0%, transparent 70%);
+      bottom: -100px; right: -100px;
+      animation: drift2 22s ease-in-out infinite alternate;
+    }
+    .bg-orb {
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(34,211,160,0.1) 0%, transparent 70%);
+      top: 40%; left: 50%; transform: translate(-50%, -50%);
+      animation: drift3 16s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { 0%{transform:translate(0,0)} 100%{transform:translate(80px,60px)} }
+    @keyframes drift2 { 0%{transform:translate(0,0)} 100%{transform:translate(-60px,80px)} }
+    @keyframes drift3 { 0%{transform:translate(-50%,-50%) scale(1)} 100%{transform:translate(-50%,-50%) scale(1.3)} }
+
+    /* Grid dots */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        radial-gradient(rgba(79,140,255,0.12) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* ── Layout ────────────────────────────────────────────── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px 80px;
+    }
+
+    /* ── Top Nav ───────────────────────────────────────────── */
+    .navbar {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 0 20px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 0 20px var(--accent-glow);
+      flex-shrink: 0;
+    }
+    .brand-text { line-height: 1; }
+    .brand-text .bname {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .brand-text .btag {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-btn:hover {
+      background: rgba(79,140,255,0.12);
+      border-color: var(--border-bright);
+      color: var(--text);
+    }
+    .nav-btn.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-color: transparent;
+      color: #fff;
+      font-weight: 600;
+    }
+    .nav-btn.primary:hover { opacity: 0.88; }
+
+    /* ── Hero Header ───────────────────────────────────────── */
+    .hero {
+      width: 100%;
+      max-width: 860px;
+      text-align: center;
+      padding: 40px 0 48px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(79,140,255,0.1);
+      border: 1px solid rgba(79,140,255,0.3);
+      border-radius: 50px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    .hero-badge span { font-size: 10px; }
+    .hero h1 {
+      font-size: clamp(32px, 6vw, 58px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #ffffff 30%, #a8c4ff 60%, #8b8fff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 14px;
+    }
+    .hero p {
+      font-size: 16px;
+      color: var(--text-dim);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 32px;
+    }
+    .stat { text-align: center; }
+    .stat-val {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Main Card ─────────────────────────────────────────── */
+    .card {
+      width: 100%;
+      max-width: 860px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    /* ── Form Grid ─────────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    label .req { color: var(--red); }
+
+    /* Inputs */
+    .input-wrap { position: relative; }
+    textarea, select, input[type="text"] {
+      width: 100%;
+      background: rgba(5, 8, 18, 0.7);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      appearance: none;
+    }
+    textarea:focus, select:focus, input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,140,255,0.15);
+    }
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+    .char-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: 4px;
+    }
+    .char-count.warn { color: var(--gold); }
+    .char-count.over { color: var(--red); }
+
+    /* Voice search */
+    .voice-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(5, 8, 18, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-bottom: 8px;
+    }
+    .voice-search:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79,140,255,0.15);
+    }
+    .voice-search .search-icon { color: var(--text-muted); font-size: 14px; flex-shrink: 0; }
+    .voice-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      width: 100%;
+      padding: 0;
+    }
+    .voice-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Select arrow */
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      pointer-events: none;
+      font-size: 12px;
+    }
+
+    /* Voice meta badge */
+    .voice-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 50px;
+      line-height: 1.5;
+    }
+    .badge-blue { background: rgba(79,140,255,0.12); border: 1px solid rgba(79,140,255,0.25); color: #7aadff; }
+    .badge-green { background: rgba(34,211,160,0.1); border: 1px solid rgba(34,211,160,0.25); color: #22d3a0; }
+    .badge-purple { background: rgba(123,95,255,0.1); border: 1px solid rgba(123,95,255,0.25); color: #a78bfa; }
+
+    /* Speed/Pitch */
+    .slider-group { display: flex; flex-direction: column; gap: 6px; }
+    .slider-row { display: flex; align-items: center; gap: 12px; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 50px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 8px var(--accent-glow);
+      cursor: pointer;
+    }
+    .slider-val {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 36px;
+      text-align: right;
+    }
+
+    /* ── Controls ──────────────────────────────────────────── */
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 13px 24px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn:hover::after { opacity: 1; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(79,140,255,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(79,140,255,0.5); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--border-bright); color: var(--text); }
+    .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Status */
+    .status-area { display: flex; align-items: center; gap: 8px; }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .status-dot.pulse {
+      background: var(--accent);
+      animation: pulse 1s infinite;
+    }
+    .status-dot.ok { background: var(--green); }
+    .status-dot.err { background: var(--red); }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(79,140,255,0.5); }
+      50% { box-shadow: 0 0 0 5px rgba(79,140,255,0); }
+    }
+    .status-text { font-size: 13px; color: var(--text-dim); }
+    .status-text.error { color: var(--red); }
+
+    /* Waveform animation */
+    .waveform {
+      display: none;
+      align-items: center;
+      gap: 3px;
+      height: 20px;
+    }
+    .waveform.active { display: flex; }
+    .wave-bar {
+      width: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+    .wave-bar:nth-child(1) { animation: wave 0.8s ease-in-out infinite; height: 8px; }
+    .wave-bar:nth-child(2) { animation: wave 0.8s ease-in-out 0.1s infinite; height: 16px; }
+    .wave-bar:nth-child(3) { animation: wave 0.8s ease-in-out 0.2s infinite; height: 12px; }
+    .wave-bar:nth-child(4) { animation: wave 0.8s ease-in-out 0.3s infinite; height: 20px; }
+    .wave-bar:nth-child(5) { animation: wave 0.8s ease-in-out 0.15s infinite; height: 14px; }
+    .wave-bar:nth-child(6) { animation: wave 0.8s ease-in-out 0.25s infinite; height: 10px; }
+    @keyframes wave {
+      0%,100% { transform: scaleY(0.4); opacity: 0.6; }
+      50% { transform: scaleY(1); opacity: 1; }
+    }
+
+    /* ── Audio Player ───────────────────────────────────────── */
+    .player-section {
+      margin-top: 24px;
+      display: none;
+      animation: slideUp 0.3s ease;
+    }
+    .player-section.visible { display: block; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .player-card {
+      background: rgba(79,140,255,0.05);
+      border: 1px solid rgba(79,140,255,0.15);
+      border-radius: var(--radius-sm);
+      padding: 20px;
+    }
+    .player-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .player-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .player-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    audio {
+      width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      outline: none;
+    }
+    audio::-webkit-media-controls-panel { background: rgba(14,18,32,0.9); }
+
+    /* ── Section Divider ───────────────────────────────────── */
+    .divider {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 48px 0 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── About Us Card ─────────────────────────────────────── */
+    .about-card {
+      width: 100%;
+      max-width: 860px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: var(--shadow);
+      margin-top: 24px;
+    }
+    .about-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .about-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 0 24px var(--accent-glow);
+      flex-shrink: 0;
+    }
+    .about-header h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .about-header p {
+      font-size: 13px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .about-item {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      transition: border-color 0.2s;
+    }
+    .about-item:hover { border-color: var(--border-bright); }
+    .about-item .ai-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .about-item .ai-label .icon { font-size: 13px; }
+    .about-item .ai-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .about-item .ai-value a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .about-item .ai-value a:hover { text-decoration: underline; }
+    .powered-by {
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(79,140,255,0.06), rgba(123,95,255,0.06));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .powered-by span { font-size: 13px; color: var(--text-muted); }
+    .powered-by strong {
+      font-size: 13px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    footer {
+      width: 100%;
+      max-width: 860px;
+      margin-top: 40px;
+      padding: 20px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: gap;
+      gap: 12px;
+    }
+    .footer-left { font-size: 12px; color: var(--text-muted); }
+    .footer-right { font-size: 12px; color: var(--text-muted); display: flex; gap: 16px; }
+    .footer-right a { color: var(--text-dim); text-decoration: none; transition: color 0.15s; }
+    .footer-right a:hover { color: var(--accent); }
+
+    /* ── Toast ─────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 28px; right: 28px;
+      background: var(--panel-solid);
+      border: 1px solid var(--border-bright);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 13px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      max-width: 300px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-color: rgba(34,211,160,0.4); }
+    .toast.err { border-color: rgba(255,95,122,0.4); }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .card, .about-card { padding: 22px 18px; }
+      .hero h1 { letter-spacing: -0.5px; }
+      .hero-stats { gap: 20px; }
+      .navbar { padding: 16px 0; }
+      .controls { gap: 8px; }
+      footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-scene"><div class="bg-orb"></div></div>
+<div class="bg-grid"></div>
+
+<div class="page">
+
+  <!-- ── Navbar ──────────────────────────────────────── -->
+  <nav class="navbar" aria-label="Site Navigation">
+    <a href="#" class="brand">
+      <div class="brand-icon">🎙️</div>
+      <div class="brand-text">
+        <div class="bname">IN NET STT</div>
+        <div class="btag">Convertor</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#about" class="nav-btn">ℹ️ About Us</a>
+      <a href="mailto:innetcreations@gmail.com" class="nav-btn primary">✉️ Contact</a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ────────────────────────────────────────── -->
+  <header class="hero">
+    <div class="hero-badge"><span>🔊</span> Text to Speech Convertor</div>
+    <h1>IN NET STT Convertor</h1>
+    <p>Transform any text into natural, expressive speech. Choose from hundreds of voices across 70+ languages — powered by Microsoft Edge Neural TTS.</p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-val" id="voiceCountStat">—</div>
+        <div class="stat-label">Voices</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">70+</div>
+        <div class="stat-label">Languages</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">Free</div>
+        <div class="stat-label">Forever</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main Card ───────────────────────────────────── -->
+  <main class="card" aria-label="Text to Speech Converter">
+    <div class="form-grid">
+
+      <!-- Text Input -->
+      <div class="form-group full">
+        <label for="text">✍️ Text to Speak <span class="req">*</span></label>
+        <div class="input-wrap">
+          <textarea
+            id="text"
+            placeholder="Type or paste your text here... (max 5000 characters)"
+            aria-required="true"
+            aria-label="Text to convert to speech"
+            maxlength="5000"
+          >Hello! Welcome to IN NET STT Convertor. This is a preview of how this voice sounds. Created by Manohar, powered by IN NET CREATIONS.</textarea>
+        </div>
+        <div class="char-count" id="charCount">178 / 5000 characters</div>
+      </div>
+
+      <!-- Voice Filter -->
+      <div class="form-group">
+        <label for="voiceSearch">🔍 Search Voice</label>
+        <div class="voice-search">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="voiceSearch"
+            placeholder="e.g. English, Female, Aria…"
+            aria-label="Search for a voice by name or language"
+          />
+        </div>
+        <div class="voice-count" id="voiceCount">Loading voices…</div>
+      </div>
+
+      <!-- Gender Filter -->
+      <div class="form-group">
+        <label for="genderFilter">⚧️ Filter by Gender</label>
+        <div class="select-wrap">
+          <select id="genderFilter" aria-label="Filter voices by gender">
+            <option value="">All Genders</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Voice Select -->
+      <div class="form-group full">
+        <label for="voice">🎤 Select Voice <span class="req">*</span></label>
+        <div class="select-wrap">
+          <select id="voice" aria-label="Choose a voice" aria-required="true"></select>
+        </div>
+        <div class="voice-meta" id="voiceMeta"></div>
+      </div>
+
+      <!-- Rate -->
+      <div class="form-group slider-group">
+        <label>⚡ Speed — <span id="rateLabel" style="color:var(--accent)">Normal</span></label>
+        <div class="slider-row">
+          <input type="range" id="rateSlider" min="-50" max="100" value="0" step="5" aria-label="Speech rate" />
+          <span class="slider-val" id="rateVal">+0%</span>
+        </div>
+      </div>
+
+      <!-- Pitch -->
+      <div class="form-group slider-group">
+        <label>🎵 Pitch — <span id="pitchLabel" style="color:var(--accent2)">Normal</span></label>
+        <div class="slider-row">
+          <input type="range" id="pitchSlider" min="-50" max="50" value="0" step="5" aria-label="Speech pitch" />
+          <span class="slider-val" id="pitchVal">+0Hz</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn btn-primary" id="playBtn" aria-label="Generate and play speech">
+        <span id="playBtnIcon">▶</span>
+        <span id="playBtnText">Generate &amp; Play</span>
+      </button>
+      <button class="btn btn-secondary" id="downloadBtn" disabled aria-label="Download audio">
+        ⬇ Download MP3
+      </button>
+      <div class="status-area">
+        <div class="status-dot" id="statusDot"></div>
+        <div class="waveform" id="waveform">
+          <div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div>
+        </div>
+        <span class="status-text" id="statusText"></span>
+      </div>
+    </div>
+
+    <!-- Player -->
+    <div class="player-section" id="playerSection">
+      <div class="player-card">
+        <div class="player-header">
+          <div class="player-title"><div class="dot"></div> Audio Output</div>
+          <span id="playerVoiceName" class="badge badge-blue" style="font-size:11px"></span>
+        </div>
+        <audio id="player" controls preload="none" aria-label="Generated speech audio"></audio>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ── About Us ─────────────────────────────────────── -->
+  <div class="divider" aria-hidden="true">
+    <div class="divider-line"></div>
+    <span class="divider-text">About Us</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <section class="about-card" id="about" aria-label="About Us">
+    <div class="about-header">
+      <div class="about-icon">🏢</div>
+      <div>
+        <h2>About IN NET CREATIONS</h2>
+        <p>Building smart, accessible tools for everyone.</p>
+      </div>
+    </div>
+
+    <div class="about-grid">
+      <div class="about-item">
+        <div class="ai-label"><span class="icon">👨‍💻</span> Creator</div>
+        <div class="ai-value">Manohar</div>
+      </div>
+      <div class="about-item">
+        <div class="ai-label"><span class="icon">📌</span> Application</div>
+        <div class="ai-value">IN NET STT Convertor</div>
+      </div>
+      <div class="about-item">
+        <div class="ai-label"><span class="icon">✉️</span> Contact</div>
+        <div class="ai-value"><a href="mailto:innetcreations@gmail.com">innetcreations@gmail.com</a></div>
+      </div>
+      <div class="about-item">
+        <div class="ai-label"><span class="icon">⚙️</span> Engine</div>
+        <div class="ai-value">Microsoft Edge Neural TTS</div>
+      </div>
+    </div>
+
+    <div class="powered-by" style="margin-top:20px;">
+      <span>🚀</span>
+      <span>Powered by</span>
+      <strong>IN NET CREATIONS</strong>
+      <span>— Crafting the future, one app at a time.</span>
+    </div>
+  </section>
+
+  <!-- ── Footer ──────────────────────────────────────── -->
+  <footer>
+    <div class="footer-left">© 2024 IN NET CREATIONS · All rights reserved · Created by Manohar</div>
+    <div class="footer-right">
+      <a href="mailto:innetcreations@gmail.com">innetcreations@gmail.com</a>
+      <a href="#about">About</a>
+    </div>
+  </footer>
+
+</div><!-- /.page -->
+
+<!-- ── Toast ─────────────────────────────────────────── -->
+<div class="toast" id="toast" role="alert" aria-live="polite"></div>
+
+<script>
+  /* ── Element refs ─────────────────────────────────── */
+  const voiceSelect   = document.getElementById('voice');
+  const voiceSearch   = document.getElementById('voiceSearch');
+  const genderFilter  = document.getElementById('genderFilter');
+  const voiceMeta     = document.getElementById('voiceMeta');
+  const voiceCount    = document.getElementById('voiceCount');
+  const textArea      = document.getElementById('text');
+  const charCount     = document.getElementById('charCount');
+  const playBtn       = document.getElementById('playBtn');
+  const playBtnIcon   = document.getElementById('playBtnIcon');
+  const playBtnText   = document.getElementById('playBtnText');
+  const downloadBtn   = document.getElementById('downloadBtn');
+  const statusDot     = document.getElementById('statusDot');
+  const statusText    = document.getElementById('statusText');
+  const waveform      = document.getElementById('waveform');
+  const player        = document.getElementById('player');
+  const playerSection = document.getElementById('playerSection');
+  const playerVoice   = document.getElementById('playerVoiceName');
+  const rateSlider    = document.getElementById('rateSlider');
+  const rateVal       = document.getElementById('rateVal');
+  const rateLabel     = document.getElementById('rateLabel');
+  const pitchSlider   = document.getElementById('pitchSlider');
+  const pitchVal      = document.getElementById('pitchVal');
+  const pitchLabel    = document.getElementById('pitchLabel');
+  const toast         = document.getElementById('toast');
+  const voiceCountStat = document.getElementById('voiceCountStat');
+
+  let allVoices = [];
+  let filteredVoices = [];
+  let currentAudioUrl = null;
+
+  /* ── Toast ───────────────────────────────────────── */
+  let toastTimer;
+  function showToast(msg, type = 'info') {
+    toast.textContent = (type === 'success' ? '✅ ' : type === 'err' ? '❌ ' : 'ℹ️ ') + msg;
+    toast.className = `toast show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toast.className = 'toast'; }, 3500);
+  }
+
+  /* ── Char counter ────────────────────────────────── */
+  function updateCharCount() {
+    const len = textArea.value.length;
+    const max = 5000;
+    charCount.textContent = `${len} / ${max} characters`;
+    charCount.className = 'char-count' + (len > max * 0.9 ? ' warn' : '') + (len >= max ? ' over' : '');
+  }
+  textArea.addEventListener('input', updateCharCount);
+  updateCharCount();
+
+  /* ── Rate / Pitch sliders ────────────────────────── */
+  function rateText(v) {
+    if (v === 0) return 'Normal';
+    return v > 0 ? 'Fast' : 'Slow';
+  }
+  function pitchText(v) {
+    if (v === 0) return 'Normal';
+    return v > 0 ? 'High' : 'Low';
+  }
+  rateSlider.addEventListener('input', () => {
+    const v = parseInt(rateSlider.value);
+    rateVal.textContent = (v >= 0 ? '+' : '') + v + '%';
+    rateLabel.textContent = rateText(v);
+  });
+  pitchSlider.addEventListener('input', () => {
+    const v = parseInt(pitchSlider.value);
+    pitchVal.textContent = (v >= 0 ? '+' : '') + v + 'Hz';
+    pitchLabel.textContent = pitchText(v);
+  });
+
+  /* ── Voice loading & filtering ───────────────────── */
+  async function loadVoices() {
+    try {
+      const res = await fetch('/api/voices');
+      allVoices = await res.json();
+      voiceCountStat.textContent = allVoices.length;
+      applyFilters();
+    } catch (e) {
+      voiceCount.textContent = 'Failed to load voices.';
+      showToast('Could not load voices. Is the server running?', 'err');
+    }
+  }
+
+  function applyFilters() {
+    const q = voiceSearch.value.toLowerCase();
+    const g = genderFilter.value;
+    filteredVoices = allVoices.filter(v =>
+      (!q || v.name.toLowerCase().includes(q) || v.locale.toLowerCase().includes(q)) &&
+      (!g || v.gender === g)
+    );
+    populateSelect();
+  }
+
+  function populateSelect() {
+    const prev = voiceSelect.value;
+    voiceSelect.innerHTML = filteredVoices.map(v =>
+      `<option value="${v.name}">${v.name} — ${v.locale} (${v.gender})</option>`
+    ).join('');
+    // Restore selection if still available
+    if (prev && filteredVoices.find(v => v.name === prev)) voiceSelect.value = prev;
+    voiceCount.textContent = `${filteredVoices.length} voice${filteredVoices.length !== 1 ? 's' : ''} found`;
+    updateMeta();
+  }
+
+  function updateMeta() {
+    const v = allVoices.find(v => v.name === voiceSelect.value);
+    if (!v) { voiceMeta.innerHTML = ''; return; }
+    voiceMeta.innerHTML = `
+      <span class="badge badge-blue">🌐 ${v.locale}</span>
+      <span class="badge ${v.gender === 'Female' ? 'badge-purple' : 'badge-green'}">
+        ${v.gender === 'Female' ? '♀️' : '♂️'} ${v.gender}
+      </span>
+    `;
+  }
+
+  voiceSearch.addEventListener('input', applyFilters);
+  genderFilter.addEventListener('change', applyFilters);
+  voiceSelect.addEventListener('change', updateMeta);
+
+  /* ── Status helpers ─────────────────────────────── */
+  function setStatus(state, msg) {
+    statusDot.className = 'status-dot' + (state === 'loading' ? ' pulse' : state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+    statusText.textContent = msg;
+    statusText.className = 'status-text' + (state === 'err' ? ' error' : '');
+    waveform.className = 'waveform' + (state === 'loading' ? ' active' : '');
+  }
+  function clearStatus() { setStatus('', ''); }
+
+  /* ── TTS generation ──────────────────────────────── */
+  async function playSpeech() {
+    const text  = textArea.value.trim();
+    const voice = voiceSelect.value;
+    const rate  = parseInt(rateSlider.value);
+    const pitch = parseInt(pitchSlider.value);
+
+    if (!text) { showToast('Please enter some text first.', 'err'); return; }
+    if (!voice) { showToast('Please select a voice.', 'err'); return; }
+
+    playBtn.disabled = true;
+    downloadBtn.disabled = true;
+    playBtnIcon.textContent = '⏳';
+    playBtnText.textContent = 'Generating…';
+    setStatus('loading', 'Synthesizing speech…');
+    playerSection.className = 'player-section';
+
+    // Removed ObjectURL revocation since we use standard backend URLs now
+    let downloadUrlStr = '';
+
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice, rate, pitch })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'TTS generation failed.');
+      }
+
+      const data = await res.json();
+      
+      // Update the player with the new audio URL served by backend
+      player.src = data.audio_url;
+      downloadUrlStr = data.download_url;
+      
+      playerSection.className = 'player-section visible';
+      playerVoice.textContent = voice;
+      setStatus('ok', 'Ready to play');
+      player.play();
+      downloadBtn.disabled = false;
+      showToast('Speech generated successfully!', 'success');
+    } catch (e) {
+      setStatus('err', e.message);
+      showToast(e.message, 'err');
+    } finally {
+      playBtn.disabled = false;
+      playBtnIcon.textContent = '▶';
+      playBtnText.textContent = 'Generate & Play';
+    }
+  }
+
+  /* ── Download ────────────────────────────────────── */
+  downloadBtn.addEventListener('click', () => {
+    if (!downloadUrlStr) return;
+    window.location.href = downloadUrlStr;
+    showToast('Downloading MP3…', 'success');
+  });
+
+  playBtn.addEventListener('click', playSpeech);
+
+  // Keyboard shortcut: Ctrl+Enter
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      if (!playBtn.disabled) playSpeech();
+    }
+  });
+
+  loadVoices();
+</script>
+</body>
+</html>
