@@ -21,6 +21,15 @@ Visit at : https://in-net-stt-convertor.vercel.app
 
 ### Option 1: Run the Pre-built Windows Application
 For standard users, there is no need to install Python or use the command line!
+
+**System Requirements:**
+- **OS:** Windows 10 or Windows 11 (64-bit)
+- **Internet:** Required (to access the Microsoft Edge TTS servers)
+- **Dependencies:** Microsoft Edge WebView2 (Built into Windows 11 and modern Windows 10). *Note: If WebView2 is missing, the app will gracefully fall back to opening in your default web browser.*
+
+**How it works:**
+The `InNetSTT.exe` is a fully portable, single-file executable built using PyInstaller. It bundles the Python runtime, the local Flask server, and all frontend UI assets. When launched, it spins up the server in the background and opens a native desktop window—meaning you get a full software experience without needing to install anything!
+
 1. Download the pre-built `InNetSTT.exe` from the `dist/` folder.
 2. Double-click the file to open the native desktop application instantly.
 3. Type your text, select a voice, and hit **Generate & Play**!
