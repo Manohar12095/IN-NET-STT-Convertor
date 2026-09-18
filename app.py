@@ -50,12 +50,16 @@ app = Flask(__name__, template_folder=resource_path("templates"))
 
 # Folder where temporary audio clips are written before being streamed back.
 # Use a writable location next to the exe (not inside the bundled temp dir).
-if getattr(sys, "frozen", False):
-    APP_DIR = os.path.dirname(sys.executable)
+# If running on Vercel, the file system is read-only except for /tmp.
+if os.environ.get("VERCEL"):
+    AUDIO_DIR = "/tmp/audio_cache"
 else:
-    APP_DIR = os.path.dirname(os.path.abspath(__file__))
+    if getattr(sys, "frozen", False):
+        APP_DIR = os.path.dirname(sys.executable)
+    else:
+        APP_DIR = os.path.dirname(os.path.abspath(__file__))
+    AUDIO_DIR = os.path.join(APP_DIR, "audio_cache")
 
-AUDIO_DIR = os.path.join(APP_DIR, "audio_cache")
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
 
